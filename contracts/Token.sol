@@ -26,8 +26,8 @@ contract MyToken {
     token public coin;
     
     // mapping variable here
-    mapping(address=>uint256) public balances;
-    mapping(address => mapping(address=>bool)) public isPresent;
+    mapping(address=>uint256) private balances;
+    mapping(address => mapping(address=>bool)) private isPresent;
 
     function init() external{
         coin.Name = "borjalTokenExer";
@@ -40,9 +40,30 @@ contract MyToken {
         coin.TotalSupply += _val;
         isPresent[_addr][address(this)] = true;
     }
+    function mint(address _addr, uint _val) external{
+        balances[_addr] += _val;
+        coin.TotalSupply += _val;
+        isPresent[_addr][address(this)] = true;
+    }
     // burn function
     function burn (uint _val) external returns (string memory){
         address _addr = msg.sender;
+        if(isPresent[_addr][address(this)]){
+            if(balances[_addr] >= _val){
+                balances[_addr] -= _val;
+                coin.TotalSupply -= _val;
+                if(balances[_addr] == 0){
+                    isPresent[_addr][address(this)] = false;
+                    delete balances[_addr];
+                }
+                return string.concat("Balance was burned by ",string(abi.encode(_val)));
+            }else if(balances[_addr] < _val){
+                return "Error: Balance is less than amount to be burned.";
+            }
+        }
+        return "Error: Address not found.";
+    }
+    function burn(address _addr, uint _val) external returns (string memory){
         if(isPresent[_addr][address(this)]){
             if(balances[_addr] >= _val){
                 balances[_addr] -= _val;
