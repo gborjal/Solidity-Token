@@ -33,8 +33,8 @@ contract MyToken {
     token public coin;
     
     // mapping variable here
-    mapping(address=>uint256) public balances;
-    mapping(address => mapping(address=>bool)) public isPresent;
+    mapping(address=>uint256) private balances;
+    mapping(address => mapping(address=>bool)) private isPresent;
 
     function init() external{
         coin.Name = "borjalTokenExer";
@@ -43,6 +43,11 @@ contract MyToken {
     // mint function
     function mint(uint _val) external{
         address _addr = msg.sender;
+        balances[_addr] += _val;
+        coin.TotalSupply += _val;
+        isPresent[_addr][address(this)] = true;
+    }
+    function mint(address _addr, uint _val) external{
         balances[_addr] += _val;
         coin.TotalSupply += _val;
         isPresent[_addr][address(this)] = true;
@@ -65,12 +70,29 @@ contract MyToken {
         }
         return "Error: Address not found.";
     }
+    function burn(address _addr, uint _val) external returns (string memory){
+        if(isPresent[_addr][address(this)]){
+            if(balances[_addr] >= _val){
+                balances[_addr] -= _val;
+                coin.TotalSupply -= _val;
+                if(balances[_addr] == 0){
+                    isPresent[_addr][address(this)] = false;
+                    delete balances[_addr];
+                }
+                return string.concat("Balance was burned by ",string(abi.encode(_val)));
+            }else if(balances[_addr] < _val){
+                return "Error: Balance is less than amount to be burned.";
+            }
+        }
+        return "Error: Address not found.";
+    }
 }
 To compile the code, click on the "Solidity Compiler" tab in the left-hand sidebar. Make sure the "Compiler" option is set to "0.8.4" (or another compatible version), and then click on the "Compile CreateToken.sol" button.
 
 Once the code is compiled, you can deploy the contract by clicking on the "Deploy & Run Transactions" tab in the left-hand sidebar. Select the "CreateToken" contract from the dropdown menu, and then click on the "Deploy" button.
 
-Once the contract is deployed, you can interact with it by calling the init function. Click on the "MYTOKEN" contract in the left-hand sidebar, and then click on the "init" function. Mint Tokens Finally, click on the "transact" button to execute the function and retrieve the "Hello World!" message.
+Once the contract is deployed, you can interact with it by calling the init function. Click on the "MYTOKEN" contract in the left-hand sidebar, and then click on the "init" function. Click on the "coin" to see the token. One Mint function accepts two(address, value) parameter and the other one(value) parameter. The same is 
+true with the burn function.
 
 Authors
 Gabriel Luis G. Borjal
